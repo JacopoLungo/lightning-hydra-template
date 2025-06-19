@@ -1,0 +1,36 @@
+program: src/train.py
+
+project: perform-species-classification
+
+description: "PureForest wandb sweep"
+
+method: bayes
+
+metric:
+  name: val/acc
+  goal: maximize
+
+parameters:
+  optimizer:
+    values: [adam, adamw]
+  optimizer.lr:
+    distribution: uniform
+    min: 0.0001
+    max: 0.1
+  data.batch_size:
+    values: [32, 64, 128]
+
+early_terminate:
+  type: hyperband
+  s: 2
+  eta: 3
+  max_iter: 2
+
+command:
+  - ${interpreter}
+  - ${program}
+  - ${args_no_hyphens}
+  - logger=wandb
+  - experiment=pureforest
+  - trainer.max_epochs=10
+  - type_run_name=sweeps

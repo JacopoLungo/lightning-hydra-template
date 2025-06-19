@@ -1,0 +1,8 @@
+wandb_image_logger:
+  _target_: src.utils.wandb_image_logger_callback.WandBImageLogger
+  visualize_images_every_n_epochs: 1
+  n_batches_to_visualize: 10
+  random_batches: false
+  image_log_fn_name: "prepare_images_for_logging" # Must match the method in the LitModel
+  log_on_train_epoch: true
+  log_on_val_epoch: true
