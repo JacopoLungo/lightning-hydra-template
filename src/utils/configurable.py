@@ -2,6 +2,7 @@ import functools
 import inspect
 from omegaconf import DictConfig
 
+# Doumentation at https://detectron2.readthedocs.io/en/latest/modules/config.html?highlight=configurable#detectron2.config.configurable
 def configurable(init_func=None, *, from_config=None):
     """
     Decorator to make a function or class's __init__ configurable using Hydra configs.
