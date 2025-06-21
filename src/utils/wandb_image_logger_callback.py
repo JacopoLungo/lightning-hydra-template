@@ -6,6 +6,114 @@ from lightning.pytorch.loggers import WandbLogger
 from typing import List, Dict, Any, Optional
 
 class WandBImageLogger(lp.Callback):
+    """
+    A Lightning Callback for logging images to Weights & Biases (W&B).
+    
+    This callback logs images from the training and/or validation loop to a W&B run.
+    It is designed to be flexible, allowing for logging at specified epoch intervals
+    and for a configurable number of batches.
+    
+    The actual image preparation and logging logic is delegated to a method
+    within the LightningModule. This keeps the data processing and visualization
+    logic with the model, while this callback handles the triggering and scheduling.
+    
+    Args:
+        visualize_images_every_n_epochs (int, optional):
+            Frequency of epochs to log images. If 1, logs every epoch.
+            If 0, logging is disabled. Defaults to 1.
+        n_batches_to_visualize (int, optional):
+            Number of batches to visualize per epoch. If -1, all batches are logged.
+            Defaults to 5.
+        random_batches (bool, optional):
+            If True, randomly selects `n_batches_to_visualize` from the available
+            batches. If False, batches are chosen at evenly spaced intervals.
+            Defaults to False.
+        image_log_fn_name (str, optional):
+            The name of the method in the LightningModule that prepares and logs
+            the images. This method should accept `batch`, `outputs`, `batch_idx`,
+            `epoch`, and `mode` as arguments. Defaults to "prepare_images_for_logging".
+        log_on_train_epoch (bool, optional):
+            If True, enables logging for the training loop. Defaults to False.
+        log_on_val_epoch (bool, optional):
+            If True, enables logging for the validation loop. Defaults to True.
+    
+    Raises:
+        ValueError: If `visualize_images_every_n_epochs` is negative.
+        ValueError: If `n_batches_to_visualize` is less than -1.
+    
+    Example Usage in a LightningModule:
+    
+    .. code-block:: python
+    
+        class MyLitModule(lp.LightningModule):
+            def __init__(self, *args, **kwargs):
+                super().__init__()
+                # your model layers
+                self.layer = torch.nn.Linear(32, 3)
+            
+            def forward(self, x):
+                return self.layer(x)
+            
+            # ... training_step, configure_optimizers, etc. ...
+            
+            def validation_step(self, batch, batch_idx):
+                # your validation logic
+                x, y = batch
+                y_hat = self(x)
+                loss = torch.nn.functional.mse_loss(y_hat, y)
+                self.log('val_loss', loss)
+                # Return model outputs to be used in the logging function
+                return {'predictions': y_hat}
+            
+            def prepare_images_for_logging(self, batch, outputs, batch_idx, epoch, mode='val'):
+                '''
+                This method is called by the WandBImageLogger callback.
+                
+                Args:
+                    batch (Any): The input batch from the dataloader.
+                    outputs (Optional[Dict[str, Any]]): The output from the
+                                                    training_step or validation_step.
+                    batch_idx (int): The index of the current batch.
+                    epoch (int): The current epoch number.
+                    mode (str): Either 'train' or 'val'.
+                '''
+                if self.logger:
+                    # Example: Log a plot of predictions vs. ground truth
+                    # Assumes batch is a tuple (inputs, labels) and outputs is a dict
+                    inputs, labels = batch
+                    preds = outputs['predictions']
+                    
+                    # Convert tensors to numpy for plotting
+                    inputs_np = inputs.cpu().numpy()
+                    labels_np = labels.cpu().numpy()
+                    preds_np = preds.cpu().numpy()
+                    
+                    # Create a wandb.Image
+                    # (This is just an example, you can create any W&B object)
+                    # For this example, let's assume we are logging a matplotlib plot
+                    import matplotlib.pyplot as plt
+                    fig, ax = plt.subplots()
+                    ax.scatter(labels_np[:, 0], preds_np[:, 0], label="Dimension 1")
+                    ax.set_title(f"Epoch {epoch} - Batch {batch_idx}")
+                    ax.set_xlabel("Ground Truth")
+                    ax.set_ylabel("Predictions")
+                    ax.legend()
+                    
+                    # Log the plot to W&B
+                    log_key = f"{mode.capitalize()} Predictions/Epoch_{epoch}"
+                    self.logger.experiment.log({
+                        log_key: wandb.Image(fig)
+                    })
+                    plt.close(fig) # Important to close the figure to free memory
+        
+        # In your training script:
+        # trainer = lp.Trainer(
+        #     logger=WandbLogger(project="my_project"),
+        #     callbacks=[WandBImageLogger(log_on_val_epoch=True)]
+        # )
+        # trainer.fit(model, datamodule)
+    
+    """
     def __init__(self,
                 visualize_images_every_n_epochs: int = 1,
                 n_batches_to_visualize: int = 5,
