@@ -89,7 +89,7 @@ class ResourceMonitorCallback(lp.Callback):
     def on_train_batch_end(self, trainer: lp.Trainer, pl_module: lp.LightningModule, 
                         outputs: Any, batch: Any, batch_idx: int) -> None:
         """Log system metrics at the end of training batches based on log_freq."""
-        if batch_idx % self.log_freq == 0:
+        if trainer.global_step % self.log_freq == 0:
             self._log_metrics(trainer, prefix="resources")
     
     def on_validation_epoch_end(self, trainer: lp.Trainer, pl_module: lp.LightningModule) -> None:
