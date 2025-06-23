@@ -1,9 +1,7 @@
 import lightning.pytorch as lp
-import torch
 import numpy as np
-import wandb
 from lightning.pytorch.loggers import WandbLogger
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 
 class WandBImageLogger(lp.Callback):
     """
