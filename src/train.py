@@ -4,9 +4,10 @@ import hydra
 import lightning as L
 import rootutils
 import torch
+torch.set_float32_matmul_precision('high') # 'medium' or 'high'
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
@@ -38,6 +39,17 @@ from src.utils import (
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
+def count_true_in_dict(d: DictConfig) -> int:
+    """
+    Iterates through a dictionary and counts the number of values that are True.
+    """
+    if not isinstance(d, DictConfig):
+        return 0
+    return sum(1 for value in d.values() if value is True)
+
+# Register the new resolver with OmegaConf under the name "count_true".
+# you can use it in your config files like this: ${count_true:your_dict}
+OmegaConf.register_new_resolver("count_true", count_true_in_dict)
 
 @task_wrapper
 def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
