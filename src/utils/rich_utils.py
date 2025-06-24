@@ -8,6 +8,10 @@ from hydra.core.hydra_config import HydraConfig
 from lightning_utilities.core.rank_zero import rank_zero_only
 from omegaconf import DictConfig, OmegaConf, open_dict
 from rich.prompt import Prompt
+import torch
+import psutil
+from lightning.pytorch.callbacks import RichProgressBar
+from typing import Any, Dict
 
 from src.utils import pylogger
 
@@ -97,3 +101,51 @@ def enforce_tags(cfg: DictConfig, save_to_file: bool = False) -> None:
     if save_to_file:
         with open(Path(cfg.paths.output_dir, "tags.log"), "w") as file:
             rich.print(cfg.tags, file=file)
+
+class RamGpuUsageRichProgressBar(RichProgressBar):
+    """
+    A custom RichProgressBar that includes RAM and GPU usage metrics.
+    you can use it by instantiating it callback/rich_progress_bar.yaml
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ram_text: str = "N/A"
+        self.gpu_text: str = "N/A"
+    
+    def get_metrics(self, trainer, model) -> Dict[str, Any]:
+        """
+        Adds RAM and GPU usage to the default metrics.
+        """
+        items = super().get_metrics(trainer, model)
+    
+        # Calculate Total system RAM usage for the current process tree
+        current_process = psutil.Process()
+        total_ram_bytes = current_process.memory_info().rss
+        try:
+            for child in current_process.children(recursive=True):
+                try:
+                    total_ram_bytes += child.memory_info().rss
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+            
+            self.ram_text = f"{total_ram_bytes / (1024**3):.2f}GB"
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            self.ram_text = "Error"
+        
+        items["RAM"] = self.ram_text
+        
+        # GPU memory metrics
+        if torch.cuda.is_available() and torch.cuda.is_initialized(): # Ensure CUDA is initialized
+            try:
+                reserved_bytes = torch.cuda.memory_reserved(0)
+                self.gpu_text = f"{reserved_bytes / (1024**3):.2f}GB"
+            except Exception:
+                self.gpu_text = "Error"
+        elif torch.cuda.is_available():
+            self.gpu_text = "CUDA init pending"
+        else:
+            self.gpu_text = "N/A (No CUDA)"
+            
+        items["GPU"] = self.gpu_text
+        
+        return items
