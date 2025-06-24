@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --gpus=1g.20gb:1
 #SBATCH -p A100
-#SBATCH --time=72:00:00
+#SBATCH --time=170:00:00
 #SBATCH -o logs/train/sbatch/%j/slrum_output.log
 #SBATCH -e logs/train/sbatch/%j/slrum_error.log
 #SBATCH --mem=32gb

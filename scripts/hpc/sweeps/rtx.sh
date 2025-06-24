@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --gpus=1
 #SBATCH -p RTX
-#SBATCH --time=72:00:00
+#SBATCH --time=170:00:00
 #SBATCH -o logs/train/sweeps/%j/slrum_output.log
 #SBATCH -e logs/train/sweeps/%j/slrum_error.log
 #SBATCH --mem=32gb
