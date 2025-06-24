@@ -1,3 +1,8 @@
+# To use, first run the following to create the sweep:
+#   wandb sweep configs/hparams_search/pureforest_wandb_example.yaml
+# Then you can launch as many agents yas ou want by calling
+#   wandb agent your-sweep-id 
+
 program: src/train.py
 
 project: perform-species-classification
