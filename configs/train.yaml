@@ -7,7 +7,7 @@ defaults:
   - data: mnist
   - model: mnist
   - callbacks: default
-  - logger: null # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
+  - logger: wandb # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
   - trainer: default
   - paths: default
   - extras: default
@@ -29,6 +29,8 @@ defaults:
 
 # task name, determines output directory path
 task_name: "train"
+type_run_name: "runs"
+run_name: ${now:%Y-%m-%d}_${now:%H-%M-%S} # when using slurm you can pass the job id here
 
 # tags to help you identify your experiments
 # you can overwrite this in experiment configs
