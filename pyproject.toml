@@ -29,8 +29,8 @@ dependencies = [
 ]
 
 [project.scripts]
-train_command = "src.train:main"
-eval_command = "src.eval:main"
+train_cmd = "src.train:main"
+eval_cmd = "src.eval:main"
 
 [build-system]
 requires = ["hatchling"]
