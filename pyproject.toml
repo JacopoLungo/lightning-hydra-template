@@ -20,11 +20,12 @@ dependencies = [
     "hydra-colorlog==1.2.0",
     "hydra-optuna-sweeper==1.2.0",
     "wandb",
-    "pre-commit",      # hooks for applying linters on commit
-    "rich",            # beautiful text formatting in terminal
-    "pytest",          # tests
+    "pre-commit", # hooks for applying linters on commit
+    "rich", # beautiful text formatting in terminal
+    "pytest", # tests
     "omegaconf",
     "ipykernel",
+    "python-dotenv>=1.2.1",
 ]
 
 [project.scripts]
