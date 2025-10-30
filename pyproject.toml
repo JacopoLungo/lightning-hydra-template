@@ -67,3 +67,6 @@ line-length = 119
 
 [tool.ruff.lint]
 select = ["E", "F", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]

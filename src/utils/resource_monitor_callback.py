@@ -1,7 +1,7 @@
 import psutil
 import torch
 import lightning.pytorch as lp
-from typing import Any, Dict
+from typing import Any
 
 class ResourceMonitorCallback(lp.Callback):
     """
@@ -22,15 +22,15 @@ class ResourceMonitorCallback(lp.Callback):
         super().__init__()
         self.log_freq = log_freq
     
-    def state_dict(self) -> Dict[str, Any]:
+    def state_dict(self) -> dict[str, Any]:
         """Return callback state dict for checkpointing."""
         return {"log_freq": self.log_freq}
     
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
         """Load callback state from checkpoint."""
         self.log_freq = state_dict.get("log_freq", 50)
     
-    def _get_resource_metrics(self) -> Dict[str, float]:
+    def _get_resource_metrics(self) -> dict[str, float]:
         """Collect RAM and GPU usage metrics."""
         metrics = {}
         

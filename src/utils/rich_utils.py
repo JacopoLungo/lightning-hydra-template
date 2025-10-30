@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Sequence
+from collections.abc import Sequence
 
 import rich
 import rich.syntax
@@ -11,7 +11,7 @@ from rich.prompt import Prompt
 import torch
 import psutil
 from lightning.pytorch.callbacks import RichProgressBar
-from typing import Any, Dict
+from typing import Any
 
 from src.utils import pylogger
 
@@ -112,7 +112,7 @@ class RamGpuUsageRichProgressBar(RichProgressBar):
         self.ram_text: str = "N/A"
         self.gpu_text: str = "N/A"
     
-    def get_metrics(self, trainer, model) -> Dict[str, Any]:
+    def get_metrics(self, trainer, model) -> dict[str, Any]:
         """
         Adds RAM and GPU usage to the default metrics.
         """

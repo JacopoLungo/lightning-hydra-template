@@ -1,7 +1,9 @@
+from typing import Any
+
 import lightning.pytorch as lp
 import numpy as np
 from lightning.pytorch.loggers import WandbLogger
-from typing import Dict, Any, Optional, List
+
 
 class WandBImageLogger(lp.Callback):
     """
@@ -121,73 +123,79 @@ class WandBImageLogger(lp.Callback):
         # trainer.test(model, datamodule)
         # trainer.predict(model, datamodule)
     """
-    def __init__(self,
-                log_on_train: bool = False,
-                train_log_every_n_epochs: Optional[int] = None,
-                train_log_every_n_steps: Optional[int] = None,
-                train_n_batches_to_visualize: int = 1,
-                train_random_batches: bool = True,
-                log_on_val_test_pred: bool = True,
-                val_test_pred_log_every_n_epochs: Optional[int] = 1,
-                val_test_pred_log_every_n_steps: Optional[int] = None,
-                val_test_pred_n_batches_to_visualize: int = 1,
-                val_test_pred_random_batches: bool = False,
-                image_log_fn_name: str = "log_visualizations",
-                ):
+
+    def __init__(
+        self,
+        log_on_train: bool = False,
+        train_log_every_n_epochs: int | None = None,
+        train_log_every_n_steps: int | None = None,
+        train_n_batches_to_visualize: int = 1,
+        train_random_batches: bool = True,
+        log_on_val_test_pred: bool = True,
+        val_test_pred_log_every_n_epochs: int | None = 1,
+        val_test_pred_log_every_n_steps: int | None = None,
+        val_test_pred_n_batches_to_visualize: int = 1,
+        val_test_pred_random_batches: bool = False,
+        image_log_fn_name: str = "log_visualizations",
+    ):
         super().__init__()
-        
+
         # --- Validation for Training Config ---
         if log_on_train:
             if train_log_every_n_epochs is not None and train_log_every_n_steps is not None:
-                raise ValueError("For training, you can only specify one of `train_log_every_n_epochs` or `train_log_every_n_steps`.")
+                raise ValueError(
+                    "For training, you can only specify one of `train_log_every_n_epochs` or `train_log_every_n_steps`."
+                )
             if train_log_every_n_epochs is not None and train_log_every_n_epochs <= 0:
                 raise ValueError("train_log_every_n_epochs must be positive.")
             if train_log_every_n_steps is not None and train_log_every_n_steps <= 0:
                 raise ValueError("train_log_every_n_steps must be positive.")
             if train_n_batches_to_visualize < -1:
                 raise ValueError("train_n_batches_to_visualize must be >= -1.")
-        
+
         # --- Validation for Val/Test/Predict Config ---
         if log_on_val_test_pred:
             if val_test_pred_log_every_n_epochs is not None and val_test_pred_log_every_n_steps is not None:
-                raise ValueError("For val/test/predict, you can only specify one of `val_test_pred_log_every_n_epochs` or `val_test_pred_log_every_n_steps`.")
+                raise ValueError(
+                    "For val/test/predict, you can only specify one of `val_test_pred_log_every_n_epochs` or `val_test_pred_log_every_n_steps`."
+                )
             if val_test_pred_log_every_n_epochs is not None and val_test_pred_log_every_n_epochs <= 0:
                 raise ValueError("val_test_pred_log_every_n_epochs must be positive.")
             if val_test_pred_log_every_n_steps is not None and val_test_pred_log_every_n_steps <= 0:
                 raise ValueError("val_test_pred_log_every_n_steps must be positive.")
             if val_test_pred_n_batches_to_visualize < -1:
                 raise ValueError("val_test_pred_n_batches_to_visualize must be >= -1.")
-        
+
         # --- Store configurations ---
         self.log_on_train = log_on_train
         self.train_log_every_n_epochs = train_log_every_n_epochs
         self.train_log_every_n_steps = train_log_every_n_steps
         self.train_n_batches_to_visualize = train_n_batches_to_visualize
         self.train_random_batches = train_random_batches
-        
+
         self.log_on_val_test_pred = log_on_val_test_pred
         self.val_test_pred_log_every_n_epochs = val_test_pred_log_every_n_epochs
         self.val_test_pred_log_every_n_steps = val_test_pred_log_every_n_steps
         self.val_test_pred_n_batches_to_visualize = val_test_pred_n_batches_to_visualize
         self.val_test_pred_random_batches = val_test_pred_random_batches
-        
+
         self.image_log_fn_name = image_log_fn_name
-        
+
         # --- State variables ---
-        self._train_batch_indices_to_log: Optional[np.ndarray] = None
-        self._val_batch_indices_to_log: Optional[np.ndarray] = None
-        self._test_batch_indices_to_log: Optional[np.ndarray] = None
-        self._predict_batch_indices_to_log: Optional[np.ndarray] = None
-        
+        self._train_batch_indices_to_log: np.ndarray | None = None
+        self._val_batch_indices_to_log: np.ndarray | None = None
+        self._test_batch_indices_to_log: np.ndarray | None = None
+        self._predict_batch_indices_to_log: np.ndarray | None = None
+
         self._do_log_on_current_train_epoch: bool = False
         self._do_log_on_current_val_epoch: bool = False
         self._do_log_on_current_test_epoch: bool = False
         self._do_log_on_current_predict_epoch: bool = False
-    
+
     def _setup_epoch_visualization(self, trainer: lp.Trainer, mode: str):
         """Pre-calculates which batch indices to log for epoch-based logging."""
         # Determine config based on mode
-        if mode == 'train':
+        if mode == "train":
             log_on_mode = self.log_on_train
             log_every_n_epochs = self.train_log_every_n_epochs
             log_every_n_steps = self.train_log_every_n_steps
@@ -199,43 +207,50 @@ class WandBImageLogger(lp.Callback):
             log_every_n_steps = self.val_test_pred_log_every_n_steps
             n_batches_to_visualize = self.val_test_pred_n_batches_to_visualize
             random_batches = self.val_test_pred_random_batches
-        
+
         # This setup is only for epoch-based logging; exit if disabled or using step-based logging
         if not log_on_mode or log_every_n_epochs is None or log_every_n_steps is not None:
-            setattr(self, f'_do_log_on_current_{mode}_epoch', False)
+            setattr(self, f"_do_log_on_current_{mode}_epoch", False)
             return
-        
+
         # Check if logging should happen on this epoch
-        should_log_this_epoch = (trainer.current_epoch % log_every_n_epochs == 0)
-        setattr(self, f'_do_log_on_current_{mode}_epoch', should_log_this_epoch)
+        should_log_this_epoch = trainer.current_epoch % log_every_n_epochs == 0
+        setattr(self, f"_do_log_on_current_{mode}_epoch", should_log_this_epoch)
         if not should_log_this_epoch:
             return
-        
+
         # Determine the number of batches for the current mode
         num_batches = 0
-        if mode == 'train':
-            if isinstance(trainer.num_training_batches, float) and trainer.num_training_batches == float('inf'):
+        if mode == "train":
+            if isinstance(trainer.num_training_batches, float) and trainer.num_training_batches == float("inf"):
                 if trainer.global_rank == 0:
-                    print("WandBImageLogger: Iterable training dataset. Will log first `n_batches_to_visualize` batches if not random.")
+                    print(
+                        "WandBImageLogger: Iterable training dataset. Will log first `n_batches_to_visualize` batches if not random."
+                    )
                 if n_batches_to_visualize > 0:
                     self._train_batch_indices_to_log = np.arange(n_batches_to_visualize)
-                else: # -1 is not supported for iterable datasets
+                else:  # -1 is not supported for iterable datasets
                     self._train_batch_indices_to_log = np.array([], dtype=int)
                 return
             num_batches = trainer.num_training_batches
-        elif mode == 'val':
-            if trainer.num_val_batches: num_batches = sum(trainer.num_val_batches)
-        elif mode == 'test':
-            if trainer.num_test_batches: num_batches = sum(trainer.num_test_batches)
-        elif mode == 'predict':
-            if trainer.num_predict_batches: num_batches = sum(trainer.num_predict_batches)
-        
+        elif mode == "val":
+            if trainer.num_val_batches:
+                num_batches = sum(trainer.num_val_batches)
+        elif mode == "test":
+            if trainer.num_test_batches:
+                num_batches = sum(trainer.num_test_batches)
+        elif mode == "predict":
+            if trainer.num_predict_batches:
+                num_batches = sum(trainer.num_predict_batches)
+
         if num_batches == 0:
             if trainer.global_rank == 0:
-                print(f"WandBImageLogger: No {mode} batches detected. Skipping image logging for epoch {trainer.current_epoch}.")
-            setattr(self, f'_do_log_on_current_{mode}_epoch', False)
+                print(
+                    f"WandBImageLogger: No {mode} batches detected. Skipping image logging for epoch {trainer.current_epoch}."
+                )
+            setattr(self, f"_do_log_on_current_{mode}_epoch", False)
             return
-        
+
         # Calculate and store batch indices to log
         if n_batches_to_visualize == -1:
             indices = np.arange(num_batches)
@@ -245,34 +260,42 @@ class WandBImageLogger(lp.Callback):
                 indices = np.random.choice(num_batches, size=num_to_pick, replace=False)
             else:
                 indices = np.linspace(0, num_batches - 1, num=num_to_pick, dtype=int)
-        
-        setattr(self, f'_{mode}_batch_indices_to_log', np.sort(indices))
-    
+
+        setattr(self, f"_{mode}_batch_indices_to_log", np.sort(indices))
+
     # --- Hooks for setting up epoch-based logging ---
     def on_train_epoch_start(self, trainer: lp.Trainer, pl_module: lp.LightningModule):
-        self._setup_epoch_visualization(trainer, mode='train')
-    
+        self._setup_epoch_visualization(trainer, mode="train")
+
     def on_validation_epoch_start(self, trainer: lp.Trainer, pl_module: lp.LightningModule):
-        self._setup_epoch_visualization(trainer, mode='val')
-    
+        self._setup_epoch_visualization(trainer, mode="val")
+
     def on_test_epoch_start(self, trainer: lp.Trainer, pl_module: lp.LightningModule):
-        self._setup_epoch_visualization(trainer, mode='test')
-    
+        self._setup_epoch_visualization(trainer, mode="test")
+
     def on_predict_epoch_start(self, trainer: lp.Trainer, pl_module: lp.LightningModule):
-        self._setup_epoch_visualization(trainer, mode='predict')
-    
-    def _log_image_batch(self, trainer: lp.Trainer, pl_module: lp.LightningModule, outputs: Optional[Dict[str, Any]], batch: Any, batch_idx: int, mode: str):
+        self._setup_epoch_visualization(trainer, mode="predict")
+
+    def _log_image_batch(
+        self,
+        trainer: lp.Trainer,
+        pl_module: lp.LightningModule,
+        outputs: dict[str, Any] | None,
+        batch: Any,
+        batch_idx: int,
+        mode: str,
+    ):
         """Central logging logic for all stages."""
         if not isinstance(trainer.logger, WandbLogger):
             return
-        
+
         if not hasattr(pl_module, self.image_log_fn_name):
             if trainer.global_rank == 0:
                 print(f"WandBImageLogger: LightningModule missing '{self.image_log_fn_name}'. Skipping image logging.")
             return
-        
+
         # Determine config based on mode
-        if mode == 'train':
+        if mode == "train":
             log_on_mode = self.log_on_train
             log_every_n_steps = self.train_log_every_n_steps
             do_log_on_current_epoch = self._do_log_on_current_train_epoch
@@ -280,9 +303,9 @@ class WandBImageLogger(lp.Callback):
         else:  # 'val', 'test', 'predict'
             log_on_mode = self.log_on_val_test_pred
             log_every_n_steps = self.val_test_pred_log_every_n_steps
-            do_log_on_current_epoch = getattr(self, f'_do_log_on_current_{mode}_epoch')
-            batch_indices_to_log = getattr(self, f'_{mode}_batch_indices_to_log')
-        
+            do_log_on_current_epoch = getattr(self, f"_do_log_on_current_{mode}_epoch")
+            batch_indices_to_log = getattr(self, f"_{mode}_batch_indices_to_log")
+
         if not log_on_mode:
             return
 
@@ -290,7 +313,7 @@ class WandBImageLogger(lp.Callback):
         # --- Step/Batch-based logging ---
         if log_every_n_steps is not None:
             # For train, use global_step. For others, use batch_idx within the stage.
-            step_to_check = trainer.global_step if mode == 'train' else batch_idx
+            step_to_check = trainer.global_step if mode == "train" else batch_idx
             if step_to_check > 0 and step_to_check % log_every_n_steps == 0:
                 should_log = True
         # --- Epoch-based logging ---
@@ -303,16 +326,47 @@ class WandBImageLogger(lp.Callback):
         if should_log:
             image_log_fn = getattr(pl_module, self.image_log_fn_name)
             image_log_fn(batch, outputs, batch_idx, trainer.current_epoch, mode=mode)
-    
+
     # --- Hooks for triggering batch-level logging ---
-    def on_train_batch_end(self, trainer: lp.Trainer, pl_module: lp.LightningModule, outputs: Optional[Dict[str, Any]], batch: Any, batch_idx: int):
-        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode='train')
-    
-    def on_validation_batch_end(self, trainer: lp.Trainer, pl_module: lp.LightningModule, outputs: Optional[Dict[str, Any]], batch: Any, batch_idx: int, dataloader_idx: int = 0):
-        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode='val')
-    
-    def on_test_batch_end(self, trainer: lp.Trainer, pl_module: lp.LightningModule, outputs: Optional[Dict[str, Any]], batch: Any, batch_idx: int, dataloader_idx: int = 0):
-        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode='test')
-    
-    def on_predict_batch_end(self, trainer: lp.Trainer, pl_module: lp.LightningModule, outputs: Optional[Dict[str, Any]], batch: Any, batch_idx: int, dataloader_idx: int = 0):
-        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode='predict')
+    def on_train_batch_end(
+        self,
+        trainer: lp.Trainer,
+        pl_module: lp.LightningModule,
+        outputs: dict[str, Any] | None,
+        batch: Any,
+        batch_idx: int,
+    ):
+        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode="train")
+
+    def on_validation_batch_end(
+        self,
+        trainer: lp.Trainer,
+        pl_module: lp.LightningModule,
+        outputs: dict[str, Any] | None,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ):
+        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode="val")
+
+    def on_test_batch_end(
+        self,
+        trainer: lp.Trainer,
+        pl_module: lp.LightningModule,
+        outputs: dict[str, Any] | None,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ):
+        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode="test")
+
+    def on_predict_batch_end(
+        self,
+        trainer: lp.Trainer,
+        pl_module: lp.LightningModule,
+        outputs: dict[str, Any] | None,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ):
+        self._log_image_batch(trainer, pl_module, outputs, batch, batch_idx, mode="predict")
