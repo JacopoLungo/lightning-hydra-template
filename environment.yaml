@@ -1,3 +1,5 @@
+#YOU CAN SAFELY DELETE THIS FILE IF YOU ARE USING UV
+
 # reasons you might want to use `environment.yaml` instead of `requirements.txt`:
 # - pip installs packages in a loop, without ensuring dependencies across all packages
 #   are fulfilled simultaneously, but conda achieves proper dependency control across
