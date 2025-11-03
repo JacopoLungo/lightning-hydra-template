@@ -26,6 +26,7 @@ dependencies = [
     "omegaconf",
     "ipykernel",
     "python-dotenv>=1.2.1",
+    "hydra-zen>=0.16.0",
 ]
 
 [project.scripts]
