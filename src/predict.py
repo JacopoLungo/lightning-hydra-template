@@ -6,14 +6,13 @@ from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
 
-
 from src.utils import (
     RankedLogger,
     extras,
-    instantiate_callbacks,
     instantiate_loggers,
     log_hyperparameters,
     task_wrapper,
+    validate_callbacks,
 )
 
 load_dotenv()
@@ -40,7 +39,7 @@ def predict(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
     log.info("Instantiating callbacks...")
-    callbacks: list[Callback] = instantiate_callbacks(cfg.get("callbacks"))
+    callbacks: list[Callback] = validate_callbacks(cfg.get("callbacks"))
 
     log.info("Instantiating loggers...")
     logger: list[Logger] = instantiate_loggers(cfg.get("logger"))

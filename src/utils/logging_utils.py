@@ -22,7 +22,9 @@ def log_hyperparameters(object_dict: dict[str, Any]) -> None:
     """
     hparams = {}
 
-    cfg = OmegaConf.to_container(object_dict["cfg"])
+    # cfg = OmegaConf.to_container(object_dict["cfg"])
+    cfg = {k: vars(v) if type(v).__name__ == 'Config' else v
+                    for k, v in object_dict["cfg"].items()}
     model = object_dict["model"]
     trainer = object_dict["trainer"]
 
@@ -41,7 +43,7 @@ def log_hyperparameters(object_dict: dict[str, Any]) -> None:
         p.numel() for p in model.parameters() if not p.requires_grad
     )
 
-    hparams["data"] = cfg["data"]
+    hparams["datamodule"] = cfg["datamodule"]
     hparams["trainer"] = cfg["trainer"]
 
     hparams["callbacks"] = cfg.get("callbacks")

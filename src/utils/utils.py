@@ -63,10 +63,11 @@ def task_wrapper(task_func: Callable) -> Callable:
     :return: The wrapped task function.
     """
 
-    def wrap(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
+    def wrap(*args, **kwargs) -> tuple[dict[str, Any], dict[str, Any]]:
         # execute the task
         try:
-            metric_dict, object_dict = task_func(cfg=cfg)
+            # metric_dict, object_dict = task_func(*args, **kwargs)
+            out = task_func(*args, **kwargs)
 
         # things to do if exception occurs
         except Exception as ex:
@@ -81,7 +82,7 @@ def task_wrapper(task_func: Callable) -> Callable:
         # things to always do after either success or exception
         finally:
             # display output dir path in terminal
-            log.info(f"Output dir: {cfg.paths.output_dir}")
+            log.info(f"Output dir: {kwargs['paths'].output_dir}")
 
             # always close wandb run (even if exception occurs so multirun won't fail)
             if find_spec("wandb"):  # check if wandb is installed
@@ -91,7 +92,7 @@ def task_wrapper(task_func: Callable) -> Callable:
                     log.info("Closing wandb!")
                     wandb.finish()
 
-        return metric_dict, object_dict
+        return out
 
     return wrap
 
