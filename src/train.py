@@ -20,15 +20,13 @@ from src.utils import (
 
 load_dotenv()
 
-torch.backends.cuda.matmul.fp32_precision = 'tf32'  # 'ieee', 'tf32', 'none'
+torch.backends.cuda.matmul.fp32_precision = "tf32"  # 'ieee', 'tf32', 'none'
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
 
 def count_true_in_dict(d: DictConfig) -> int:
-    """
-    Iterates through a dictionary and counts the number of values that are True.
-    """
+    """Iterates through a dictionary and counts the number of values that are True."""
     if not isinstance(d, DictConfig):
         return 0
     return sum(1 for value in d.values() if value is True)

@@ -12,7 +12,7 @@ source .venv/bin/activate
 python src/train.py \
     experiment=pureforest \
     trainer.max_epochs=100 \
-    run_name=$SLURM_JOB_ID \
+    run_name="$SLURM_JOB_ID" \
     type_run_name=sbatch
 
 # sbatch out path should be: logs/${task_name}/sbatch/%j/...

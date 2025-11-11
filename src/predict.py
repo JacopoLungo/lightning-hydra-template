@@ -6,7 +6,6 @@ from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
 
-
 from src.utils import (
     RankedLogger,
     extras,
@@ -70,9 +69,7 @@ def predict(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
 
 
 def count_true_in_dict(d: DictConfig) -> int:
-    """
-    Iterates through a dictionary and counts the number of values that are True.
-    """
+    """Iterates through a dictionary and counts the number of values that are True."""
     if not isinstance(d, DictConfig):
         return 0
     return sum(1 for value in d.values() if value is True)

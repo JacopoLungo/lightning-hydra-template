@@ -6,8 +6,7 @@ from lightning.pytorch.loggers import WandbLogger
 
 
 class WandBImageLogger(lp.Callback):
-    """
-    A Lightning Callback for logging images to Weights & Biases (W&B).
+    """A Lightning Callback for logging images to Weights & Biases (W&B).
 
     This callback logs images from the training, validation, testing, and/or
     prediction loops to a W&B run. It is designed to be flexible, allowing for
@@ -144,7 +143,8 @@ class WandBImageLogger(lp.Callback):
         if log_on_train:
             if train_log_every_n_epochs is not None and train_log_every_n_steps is not None:
                 raise ValueError(
-                    "For training, you can only specify one of `train_log_every_n_epochs` or `train_log_every_n_steps`."
+                    "For training, you can only specify one of `train_log_every_n_epochs` or "
+                    "`train_log_every_n_steps`."
                 )
             if train_log_every_n_epochs is not None and train_log_every_n_epochs <= 0:
                 raise ValueError("train_log_every_n_epochs must be positive.")
@@ -157,7 +157,8 @@ class WandBImageLogger(lp.Callback):
         if log_on_val_test_pred:
             if val_test_pred_log_every_n_epochs is not None and val_test_pred_log_every_n_steps is not None:
                 raise ValueError(
-                    "For val/test/predict, you can only specify one of `val_test_pred_log_every_n_epochs` or `val_test_pred_log_every_n_steps`."
+                    "For val/test/predict, you can only specify one of `val_test_pred_log_every_n_epochs` or "
+                    "`val_test_pred_log_every_n_steps`."
                 )
             if val_test_pred_log_every_n_epochs is not None and val_test_pred_log_every_n_epochs <= 0:
                 raise ValueError("val_test_pred_log_every_n_epochs must be positive.")
@@ -225,7 +226,8 @@ class WandBImageLogger(lp.Callback):
             if isinstance(trainer.num_training_batches, float) and trainer.num_training_batches == float("inf"):
                 if trainer.global_rank == 0:
                     print(
-                        "WandBImageLogger: Iterable training dataset. Will log first `n_batches_to_visualize` batches if not random."
+                        "WandBImageLogger: Iterable training dataset. Will log first "
+                        "`n_batches_to_visualize` batches if not random."
                     )
                 if n_batches_to_visualize > 0:
                     self._train_batch_indices_to_log = np.arange(n_batches_to_visualize)
@@ -246,7 +248,8 @@ class WandBImageLogger(lp.Callback):
         if num_batches == 0:
             if trainer.global_rank == 0:
                 print(
-                    f"WandBImageLogger: No {mode} batches detected. Skipping image logging for epoch {trainer.current_epoch}."
+                    f"WandBImageLogger: No {mode} batches detected. Skipping image logging for epoch "
+                    f"{trainer.current_epoch}."
                 )
             setattr(self, f"_do_log_on_current_{mode}_epoch", False)
             return

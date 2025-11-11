@@ -1,7 +1,7 @@
 import warnings
+from collections.abc import Callable
 from importlib.util import find_spec
 from typing import Any
-from collections.abc import Callable
 
 from omegaconf import DictConfig
 
