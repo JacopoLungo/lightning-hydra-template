@@ -9,7 +9,6 @@ authors = [
 requires-python = ">=3.10"
 
 dependencies = [
-    "lightning",
     "hydra-core",
     "ipykernel>=7.1.0",
     "torch>=2.0.0",
@@ -20,12 +19,15 @@ dependencies = [
     "hydra-colorlog==1.2.0",
     "hydra-optuna-sweeper==1.2.0",
     "wandb",
-    "pre-commit", # hooks for applying linters on commit
     "rich", # beautiful text formatting in terminal
-    "pytest", # tests
     "omegaconf",
-    "ipykernel",
     "python-dotenv>=1.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pytest",
 ]
 
 [project.scripts]
@@ -66,7 +68,15 @@ exclude_lines = [
 line-length = 119
 
 [tool.ruff.lint]
-select = ["E", "F", "UP"]
+select = [
+    "E",
+    "F",   # pyflakes
+    "UP",  # pyupgrade
+    "I",   # isort
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
