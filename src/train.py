@@ -20,7 +20,7 @@ from src.utils import (
 
 load_dotenv()
 
-torch.set_float32_matmul_precision("high")  # 'medium' or 'high'
+torch.backends.cuda.matmul.fp32_precision = 'tf32'  # 'ieee', 'tf32', 'none'
 
 log = RankedLogger(__name__, rank_zero_only=True)
 
@@ -36,7 +36,8 @@ def count_true_in_dict(d: DictConfig) -> int:
 
 # Register the new resolver with OmegaConf under the name "count_true".
 # you can use it in your config files like this: ${count_true:your_dict}
-OmegaConf.register_new_resolver("count_true", count_true_in_dict)
+if not OmegaConf.has_resolver("count_true"):
+    OmegaConf.register_new_resolver("count_true", count_true_in_dict)
 
 
 @task_wrapper
