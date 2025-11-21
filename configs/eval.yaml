@@ -11,6 +11,8 @@ defaults:
   - hydra: default
 
 task_name: "eval"
+type_run_name: "runs"
+run_name: ${now:%Y-%m-%d}_${now:%H-%M-%S} # when using slurm you can pass the job id here
 
 tags: ["dev"]
 
